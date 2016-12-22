@@ -4,7 +4,7 @@ from django.contrib.gis.db.models.fields import PointField
 from django.db import models
 from django.db.models import CharField, TextField, DateField
 from django.db.models.fields.related import ForeignKey, ManyToManyField
-from django.forms import ImageField
+from django.forms import ImageField, FileField
 
 
 class TitleDescrptionModel(models.Model):
@@ -29,7 +29,7 @@ class DatebleModel(models.Model):
 
 
 class DocumentCatergory(TitleDescrptionModel):
-    parent = ForeignKey('DocumentCatergory', null=True, blank=True)
+    parent = ForeignKey('DocumentCatergory', null=True, blank=True, related_name='childs')
 
     class Meta:
         app_label = 'archive'
@@ -69,29 +69,36 @@ class DocumentType(TitleDescrptionModel):
         app_label = 'archive'
 
 
-class Document(TitleDescrptionModel, DatebleModel, PositionableModel):
-    type = ForeignKey(DocumentType, null=False, blank=False)
-
-    tags = ManyToManyField('Tag', blank=True, )
-
-    categories = ManyToManyField('DocumentCatergory', blank=True, )
-
-    storage_location = ForeignKey(StorageLocation)
+class DocumentPart(TitleDescrptionModel, DatebleModel, PositionableModel):
+    parent = ForeignKey('Document', blank=False, null=False, related_name='parts')
+    type = ForeignKey(DocumentType, null=False, blank=False, related_name='documents')
 
     class Meta:
         app_label = 'archive'
 
 
-class Photo(Document):
+class Photo(DocumentPart):
+
     image = ImageField(required=False, )
     thumbnail = ImageField(required=False, )
 
     class Meta:
         app_label = 'archive'
 
+class FileDocument(DocumentPart):
 
-class DocumentAggregate(TitleDescrptionModel, ):
-    documents = ManyToManyField('Document')
+    file = FileField(required=False, )
+
+    class Meta:
+        app_label = 'archive'
+
+class Document(TitleDescrptionModel, ):
+
+    tags = ManyToManyField('Tag', blank=True, related_name='documents')
+
+    categories = ManyToManyField('DocumentCatergory', blank=True, related_name='documents')
+
+    storage_location = ForeignKey(StorageLocation, related_name='documents')
 
     class Meta:
         app_label = 'archive'
