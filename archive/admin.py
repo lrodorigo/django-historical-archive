@@ -1,18 +1,20 @@
 from django.contrib import admin
 
 # Register your models here.
-from archive.models import Document, Photo, Tag, DocumentType, StorageLocation, DocumentCatergory
+from archive.models import Document, Photo, Tag, DocumentType, StorageLocation, DocumentCatergory, DocumentPart, Video
 
-class DocumentTypeAdminInline(admin.TabularInline):
-    model = DocumentCatergory
 
-class StorageLocationAdminInline(admin.TabularInline):
-    model = StorageLocation
+def make_inline(_model):
+    class TempInline(admin.TabularInline):
+        model = _model
 
-@admin.register(Document, Photo)
+    return TempInline
+
+
+
+@admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-    search_fields = ['categories', 'tags', 'title']
-    pass
+    inlines = [make_inline(DocumentPart), make_inline(Photo), make_inline(Video)]
 
 #admin.site.register(Document)
 #admin.site.register(Photo)
